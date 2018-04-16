@@ -39,6 +39,13 @@ impl<N: Copy> ECEF<N> {
 }
 
 impl<N: Float> ECEF<N> {
+    /// Calculates the euclidian distance between self and other
+    pub fn distance(&self, other: &ECEF<N>) -> N {
+        ((self.x() - other.x()).powi(2)
+            + (self.y() - other.y()).powi(2)
+            + (self.z() - other.z()).powi(2)).sqrt()
+    }
+
     /// Create a rotation matrix from ECEF frame to ENU frame
     fn r_en(self) -> Matrix3<N> {
         let wgs = WGS84::from(self);
@@ -224,6 +231,15 @@ mod tests {
         close(a.x(), b.x(), 0.000001);
         close(a.y(), b.y(), 0.000001);
         close(a.z(), b.z(), 0.000001);
+    }
+
+    #[test]
+    fn distance_ecef() {
+        close(ECEF::new(100.0, 100.0, 100.0).distance(&ECEF::new(100.0, 100.0, 0.0)), 100.0, 0.00001);
+        close(ECEF::new(500.0, 0.0, 0.0).distance(&ECEF::new(500.0, 100.0, 0.0)), 100.0, 0.00001);
+        close(ECEF::new(0.0, 0.0, 0.0).distance(&ECEF::new(100.0, 0.0, 0.0)), 100.0, 0.00001);
+        close(ECEF::new(700.0, 300.0, 0.0).distance(&ECEF::new(700.0, 200.0, 100.0)), 141.42, 0.01);
+        close(ECEF::new(0.0, 0.0, 0.0).distance(&ECEF::new(100.0, 100.0, 100.0)), 173.21, 0.01);
     }
 
     quickcheck! {
