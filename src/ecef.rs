@@ -74,7 +74,7 @@ impl<N, T> Add<T> for ECEF<N>
     type Output = ECEF<N>;
     fn add(self, right: T) -> ECEF<N> {
         let enu = T::into(right);
-        let pos = self.0 + self.r_en() * enu.access();
+        let pos = self.0 + self.r_ne() * enu.access();
         ECEF(pos)
     }
 }
@@ -85,7 +85,7 @@ impl<N, T> AddAssign<T> for ECEF<N>
 {
     fn add_assign(&mut self, right: T) {
         let enu = T::into(right);
-        self.0 += self.r_en() * enu.access();
+        self.0 += self.r_ne() * enu.access();
     }
 }
 
@@ -93,7 +93,7 @@ impl<N: Float> Sub<ECEF<N>> for ECEF<N> {
     type Output = ENU<N>;
     fn sub(self, right: ECEF<N>) -> ENU<N> {
         let vec = self.0 - right.0;
-        let mat = right.r_ne();
+        let mat = right.r_en();
         let enu = mat * vec;
         ENU::new(enu.x, enu.y, enu.z)
     }
@@ -106,7 +106,7 @@ impl<N, T> Sub<T> for ECEF<N>
     type Output = ECEF<N>;
     fn sub(self, right: T) -> ECEF<N> {
         let enu = T::into(right);
-        let vec_e = self.r_en() * enu.access();
+        let vec_e = self.r_ne() * enu.access();
         ECEF(self.0 - vec_e)
     }
 }
@@ -117,7 +117,7 @@ impl<N, T> SubAssign<T> for ECEF<N>
 {
     fn sub_assign(&mut self, right: T) {
         let enu = T::into(right);
-        let vec_e = self.r_en() * enu.access();
+        let vec_e = self.r_ne() * enu.access();
         self.0 -= vec_e;
     }
 }
@@ -269,8 +269,8 @@ mod tests {
             let vec_e = ecef_b.0 - ecef_a.0;
 
             // Retrieve the rotation matrix for A converting ENU -> Earth
-            let r_en = ecef_a.r_en();
-            let vec_e2 = r_en * vec_enu.access();
+            let r_ne = ecef_a.r_ne();
+            let vec_e2 = r_ne * vec_enu.access();
 
             // These should be equivalent:
             close(vec_e.as_ref(), vec_e2.as_ref(), 0.0000001);
@@ -288,7 +288,7 @@ mod tests {
             ecef_close(ecef_b, ecef_b2);
         }
 
-        fn distance(a: WGS84<f64>, b: WGS84<f64>) -> () {
+        fn distance_enu(a: WGS84<f64>, b: WGS84<f64>) -> () {
             // Test that the vector A->B and B->A is of equal length
             let dist_ab = (ECEF::from(b) - ECEF::from(a)).norm();
             let dist_ba = (ECEF::from(a) - ECEF::from(b)).norm();
